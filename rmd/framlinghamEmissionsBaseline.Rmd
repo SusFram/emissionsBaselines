@@ -211,7 +211,7 @@ Define Framlingham by selecting the following LSOAs (see map above):
  
 Ideally we'd like to include non-residential energy use but that is only available at the MSOA level - which as we've seen is larger than the Framlingham parish.
 
-## Gas 2010
+## Domestic Gas 2010
 
 Note the 'old' local authority label.
 
@@ -244,7 +244,7 @@ message("Total T CO2e from gas  = ", sum(fram_gas2010_dt$T_co2e_gas))
 ```
 
 
-## Electricity 2010
+## Domestic Electricity 2010
 
   BEIS CI: 0.48531 kg CO2e/kWh - very high due to use of goal.
   
@@ -282,7 +282,7 @@ message("That's ", 100*round(s2021/s2010,2), " % lower.")
 ```
 
 
-## Gas 2019 (latest data, pre-covid)
+## Domestic Gas 2019 (latest data, pre-covid)
 
 ```{r getResidentialGas2019}
 gas_dt <- data.table::fread(paste0(dataFolder, "beis/subnationalGas/lsoaDom/LSOA_GAS_2019.csv.gz"))
@@ -315,7 +315,7 @@ message("Total T CO2e from gas  = ", sum(fram_gas2019_dt$T_co2e_gas))
 ```
 
 
-## Electricity 2019 (latest data, pre-covid)
+## Domestic Electricity 2019 (latest data, pre-covid)
 
   BEIS CI:   0.2556   kg CO2e/kWh +   0.03565  + 0.02170 (WTT + T&D) 
   
@@ -349,42 +349,7 @@ message("Total T CO2e from electricity  = ", sum(fram_elec2019_dt$T_co2e_elec))
 
 ## 2010 - 2019 change
 
-### Gas 2010-2019
-
-```{r gasChange}
-
-# add to 2010
-fram_gas2010_dt[, year := 2010]
-fram_gas2019_dt[, year := 2019]
-
-fg_2010 <- fram_gas2010_dt[,.(LSOA11CD, LSOA11NM, WD20NM, total_gas_kWh, T_co2e_gas, nMeters = `Number of meters`, year)]
-fg_2019 <- fram_gas2019_dt[ ,.(LSOA11CD, LSOA11NM, WD20NM, total_gas_kWh, T_co2e_gas, nMeters = `Number of consuming meters`, year)]
-fram_gas_dt <- rbind(fg_2010, fg_2019)
-
-ggplot2::ggplot(fram_gas_dt, aes(x = year, y = total_gas_kWh/1000, colour = LSOA11NM)) +
-  geom_line() +
-  geom_point() +
-  labs(y = "Gas MWh")
-
-ggplot2::ggplot(fram_gas_dt, aes(x = year, y = T_co2e_gas, colour = LSOA11NM)) +
-  geom_line() +
-  geom_point()
-
-fram_gas_dt
-
-gas_meters_diff = sum(fram_gas2019_dt$`Number of consuming meters`)-sum(fram_gas2010_dt$`Number of meters`)
-gas_meters_diff_pc <- 100*(gas_meters_diff/sum(fram_gas2010_dt$`Number of meters`))
-message("Change in number of meters = ", gas_meters_diff , " (", round(gas_meters_diff_pc)," %)")
-
-gas_diff = sum(fram_gas2019_dt$total_gas_kWh)-sum(fram_gas2010_dt$total_gas_kWh)
-pc_gas_diff <- 100*(gas_diff/sum(fram_gas2019_dt$total_gas_kWh))
-message("Change in total gas use = ", gas_diff/1000 , " MWh")
-message("% change in total gas use = ", round(pc_gas_diff,2), " %")
-
-gas_Tco2e_diff = sum(fram_gas2019_dt$T_co2e_gas)-sum(fram_gas2010_dt$T_co2e_gas)
-pc_gas_Tco2e_diff <- 100 * (gas_Tco2e_diff/sum(fram_gas2010_dt$T_co2e_gas))
-message("% change in T CO2e from gas use = ", round(pc_gas_Tco2e_diff,2), " %")
-```
+### Domestic Gas 2010-2019
 
 ```{r getAllGasFiles}
 # slightly more complex - need to load all files & select LSOAs
@@ -456,42 +421,7 @@ ggplot2::ggplot(fram_gas_allYears, aes(x = year, y = total_gas_kWh/total_nMeters
 ```
 
 
-### Electricity 2010-2019
-
-```{r elecChange}
-
-# add to 2010
-fram_elec2010_dt[, year := 2010]
-fram_elec2019_dt[, year := 2019]
-
-fe_2010 <- fram_elec2010_dt[,.(LSOA11CD, LSOA11NM, WD20NM, total_elec_kWh, T_co2e_elec, nMeters = `Total number of domestic electricity meters`, year)]
-fe_2019 <- fram_elec2019_dt[ ,.(LSOA11CD, LSOA11NM, WD20NM, total_elec_kWh, T_co2e_elec, nMeters = `Total number of domestic electricity meters`, year)]
-fram_elec_dt <- rbind(fe_2010, fe_2019)
-
-ggplot2::ggplot(fram_elec_dt, aes(x = year, y = total_elec_kWh/1000, colour = LSOA11NM)) +
-  geom_line() +
-  geom_point() +
-  labs(y = "Electricity MWh")
-
-ggplot2::ggplot(fram_elec_dt, aes(x = year, y = T_co2e_elec, colour = LSOA11NM)) +
-  geom_line() +
-  geom_point()
-
-fram_elec_dt
-
-elec_meters_diff = sum(fram_elec2019_dt$`Total number of domestic electricity meters`)-sum(fram_elec2010_dt$`Total number of domestic electricity meters`)
-elec_meters_diff_pc <- 100*(elec_meters_diff/sum(fram_elec2010_dt$`Total number of domestic electricity meters`))
-message("Change in number of meters = ", elec_meters_diff , " (", round(elec_meters_diff_pc)," %) - should probably be about the same as number of gas meters until new builds with electricity only are more common")
-
-elec_diff = sum(fram_elec2019_dt$total_elec_kWh)-sum(fram_elec2010_dt$total_elec_kWh)
-pc_elec_diff <- 100*(elec_diff/sum(fram_elec2010_dt$total_elec_kWh))
-message("Change in total electricity use = ", elec_diff/1000 , " MWh")
-message("% change in total electricity use = ", round(pc_elec_diff,2), " %")
-
-elec_Tco2e_diff = sum(fram_elec2019_dt$T_co2e_elec)-sum(fram_elec2010_dt$T_co2e_elec)
-pc_elec_Tco2e_diff <- 100 * (elec_Tco2e_diff/sum(fram_elec2010_dt$T_co2e_elec))
-message("% change in T CO2e from electricity use = ", round(pc_elec_Tco2e_diff,2), " %")
-```
+### Domestic Electricity 2010-2019
 
 ```{r getAllElecFiles}
 # slightly more complex - need to load all files & select LSOAs
@@ -558,7 +488,7 @@ ggplot2::ggplot(fram_elec_allYears, aes(x = year, y = total_elec_kWh/total_nMete
 
 ## Territorial-based emissions
 
-## Consujption-based emissions
+## Consumption-based emissions
 
 # Annex
 
